@@ -1,6 +1,7 @@
 const router = require("express").Router();
-
 const { Blog } = require("../models");
+require("express-async-errors");
+const errorHandler = require("../middleware/errorHandler");
 
 router.get("/", async (req, res) => {
   const blogs = await Blog.findAll();
@@ -8,31 +9,22 @@ router.get("/", async (req, res) => {
 });
 
 router.post("/", async (req, res) => {
-  try {
-    console.log("adding blog to the database:", blog);
-    const blog = await Blog.create(req.body);
-    res.json(blog);
-  } catch (err) {
-    return res.status(400).json({ err });
-  }
+  console.log("adding blog to the database:", blog);
+  const blog = await Blog.create(req.body);
+  res.status(201).json(blog);
 });
 
 router.delete("/:id", async (req, res) => {
   const blogId = req.params.id;
 
-  try {
-    const blog = await Blog.findByPk(blogId);
+  const blog = await Blog.findByPk(blogId);
 
-    if (!blog) {
-      return res.status(404).json({ message: "blog not found" });
-    }
-
-    await blog.destroy();
-    res.status(200).json({ message: "blog deleted successfully" });
-  } catch (err) {
-    console.log("error while deleting blog:", err);
-    res.status(500).json({ message: "Server error" });
+  if (!blog) {
+    return res.status(404).json({ message: "blog not found" });
   }
+
+  await blog.destroy();
+  res.status(200).json({ message: "blog deleted successfully" });
 });
 
 router.put("/:id", async (req, res) => {
@@ -46,5 +38,7 @@ router.put("/:id", async (req, res) => {
     res.status(404).end();
   }
 });
+
+router.use(errorHandler);
 
 module.exports = router;
