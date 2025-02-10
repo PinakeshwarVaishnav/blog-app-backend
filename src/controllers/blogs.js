@@ -1,13 +1,13 @@
 const router = require("express").Router();
 
-const { Blog } = require("../models/blog");
+const { Blog } = require("../models");
 
-router.get("/api/blogs", async (req, res) => {
+router.get("/", async (req, res) => {
   const blogs = await Blog.findAll();
   res.json(blogs);
 });
 
-router.post("/api/blogs", async (req, res) => {
+router.post("/", async (req, res) => {
   try {
     console.log("adding blog to the database:", blog);
     const blog = await Blog.create(req.body);
@@ -17,7 +17,7 @@ router.post("/api/blogs", async (req, res) => {
   }
 });
 
-router.delete("/api/blogs/:id", async (req, res) => {
+router.delete("/:id", async (req, res) => {
   const blogId = req.params.id;
 
   try {
@@ -32,6 +32,18 @@ router.delete("/api/blogs/:id", async (req, res) => {
   } catch (err) {
     console.log("error while deleting blog:", err);
     res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.put("/:id", async (req, res) => {
+  const blogId = await Blog.findByPk(req.params.id);
+
+  if (blogId) {
+    blogId.likes = req.body.likes;
+    await blogId.save();
+    res.json(blogId);
+  } else {
+    res.status(404).end();
   }
 });
 
