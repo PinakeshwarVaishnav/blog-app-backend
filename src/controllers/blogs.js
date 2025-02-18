@@ -1,7 +1,8 @@
 const router = require("express").Router();
-const { Blog } = require("../models");
+const { Blog, User } = require("../models");
 require("express-async-errors");
 const errorHandler = require("../middleware/errorHandler");
+const authenticateToken = require("../middleware/authenticateToken");
 
 router.get("/", async (req, res) => {
   const blogs = await Blog.findAll();
@@ -14,13 +15,18 @@ router.post("/", async (req, res) => {
   res.status(201).json(blog);
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", authenticateToken, async (req, res) => {
   const blogId = req.params.id;
 
+  const userId = await User.findByPk(req.decodedToken.id);
   const blog = await Blog.findByPk(blogId);
 
   if (!blog) {
     return res.status(404).json({ message: "blog not found" });
+  }
+
+  if (blog.UserId !== userId) {
+    return res.status(403).json({ message: "unauthorized" });
   }
 
   await blog.destroy();
